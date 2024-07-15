@@ -211,7 +211,7 @@
 		regulator-name = "vdd_pwm_fan";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio5 12 GPIO_ACTIVE_HIGH>;
+		gpio = <&gpio4 27 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		status = "disabled";
 	};
@@ -226,7 +226,7 @@
 	compatible = "gpio-fan";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_fansupply>;
-	gpios = <&gpio5 12 GPIO_ACTIVE_HIGH>;
+	gpios = <&gpio4 27 GPIO_ACTIVE_HIGH>;
  	gpio-fan,speed-map = <0 0 5000 2 10000 4 20000 1>;
 	status = "okay";
 };
@@ -859,13 +859,6 @@
 			>;
 	};
 
-	// because of new vol+
-	// pinctrl_csi1: csi1grp {
-	// 	fsl,pins = <
-	// 		MX8MP_IOMUXC_SAI1_RXD7__GPIO4_IO09				0x10
-	// 		MX8MP_IOMUXC_SAI1_TXD0__GPIO4_IO12				0x10
-	// 		>;
-	// };
 
     pinctrl_blpower: regulatorblgrp {
 	 	fsl,pins = <
@@ -886,7 +879,7 @@
 
 	pinctrl_fansupply: fangrp {
 	  	fsl,pins = <
-	  		MX8MP_IOMUXC_ECSPI2_MISO__GPIO5_IO12	0x0	/* FAN Supply Output  */
+	  		MX8MP_IOMUXC_SAI2_MCLK__GPIO4_IO27	0x0	/* FAN Supply Output  */
 	  	>;
 	};
 

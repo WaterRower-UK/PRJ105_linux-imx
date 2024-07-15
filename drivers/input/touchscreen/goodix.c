@@ -228,11 +228,6 @@ static const u8 ConfigV43[] = {
 		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xE4,0x01};
 
 
-static void goodix_free_irq(struct goodix_ts_data *ts)
-{
-	devm_free_irq(&ts->client->dev, ts->client->irq, ts);
-}
-
 /**
  * goodix_i2c_read - read data from a register of the i2c slave device.
  *
@@ -468,12 +463,10 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-#if 0
 static void goodix_free_irq(struct goodix_ts_data *ts)
 {
 	devm_free_irq(&ts->client->dev, ts->client->irq, ts);
 }
-#endif
 
 static int goodix_request_irq(struct goodix_ts_data *ts)
 {
@@ -571,7 +564,6 @@ static int goodix_check_cfg(struct goodix_ts_data *ts, const u8 *cfg, int len)
 	if (len < GOODIX_CONFIG_MIN_LENGTH ||
 	    len > GOODIX_CONFIG_MAX_LENGTH) {
 				printk(KERN_INFO "GOODIX CHECK CONFIG DATA size\n");
-
 		dev_err(&ts->client->dev,
 			"The length of the config fw is not correct");
 		return -EINVAL;
@@ -697,19 +689,15 @@ static int goodix_int_sync(struct goodix_ts_data *ts)
 
 	error = goodix_irq_direction_output(ts, 0);
 	if (error)
-		goto error;
+		return error;
 
 	msleep(50);				/* T5: 50ms */
 
 	error = goodix_irq_direction_input(ts);
 	if (error)
-		goto error;
+		return error;
 
 	return 0;
-
-error:
-	dev_err(&ts->client->dev, "Controller irq sync failed.\n");
-	return error;
 }
 
 /**
@@ -977,9 +965,8 @@ static void goodix_read_config(struct goodix_ts_data *ts)
 	int error;
 
 	error = goodix_i2c_read(ts->client, ts->chip->config_addr,
-				ts->config, ts->chip->config_len);
+				ts->config, 9;
     pr_info("GOODIX : Read dts config...\n");
-
 	if (error) {
         pr_info("GOODIX : Read dts config error...\n");
 		dev_warn(&ts->client->dev, "Error reading config: %d\n",
@@ -988,6 +975,7 @@ static void goodix_read_config(struct goodix_ts_data *ts)
 		ts->max_touch_num = GOODIX_MAX_CONTACTS;
 		return;
 	}
+	#if 0
 	else if (ts->config[0] != 0x43) {
 		// if the version is not 43 we write the new configuration
 		printk(KERN_INFO "GOODIX : Config force by programming\n");
@@ -1021,6 +1009,7 @@ static void goodix_read_config(struct goodix_ts_data *ts)
 	else if (ts->config[0] == 0x43) {
 		printk(KERN_INFO "GOODIX : Config version already is 43\n");
 	}
+	#endif
 
 	ts->int_trigger_type = ts->config[TRIGGER_LOC] & 0x03;
 	ts->max_touch_num = ts->config[MAX_CONTACTS_LOC] & 0x0f;
@@ -1148,7 +1137,7 @@ static int goodix_configure_dev(struct goodix_ts_data *ts)
 	}
 
     pr_info("GOODIX INIT STARTED\n");
-	
+
 
 	input_set_capability(ts->input_dev, EV_ABS, ABS_MT_POSITION_X);
 	input_set_capability(ts->input_dev, EV_ABS, ABS_MT_POSITION_Y);
@@ -1453,7 +1442,10 @@ static int __maybe_unused goodix_resume(struct device *dev)
 	error = goodix_i2c_read(ts->client, ts->chip->config_addr,
 				&config_ver, 1);
 	printk(KERN_INFO "GOODIX Wake-up Mode - Read Config Version\n");
-	if (!error && config_ver != ts->config[0])
+	if (error)
+		dev_warn(dev, "Error reading config version: %d, resetting controller\n",
+			 error);
+	else if (config_ver != ts->config[0])
 		dev_info(dev, "Config version mismatch %d != %d, resetting controller\n",
 			 config_ver, ts->config[0]);
 
@@ -1461,13 +1453,17 @@ static int __maybe_unused goodix_resume(struct device *dev)
 	printk(KERN_INFO "GOODIX Wake-up Mode config not correct");
 		error = goodix_reset(ts);
 	printk(KERN_INFO "GOODIX Wake-up Force Reset");
-		if (error)
+		if (error) {
+			dev_err(dev, "Controller reset failed.\n");
 			return error;
+		}
 
-		error = goodix_send_cfg(ts, ts->config, ts->chip->config_len);
+		if (ts->load_cfg_from_disk) {
+			error = goodix_send_cfg(ts, ts->config, ts->chip->config_len);
 	printk(KERN_INFO "GOODIX Wake-up Try reconfiguration");
-		if (error)
-			return error;
+			if (error)
+				return error;
+		}
 	}
 
 	error = goodix_request_irq(ts);
