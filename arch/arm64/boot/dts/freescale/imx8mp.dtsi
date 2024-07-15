@@ -12,6 +12,9 @@
 
 #include "imx8mp-pinfunc.h"
 
+#define GPIO_FAN 1
+
+
 / {
 	interrupt-parent = <&gic>;
 	#address-cells = <2>;
@@ -531,27 +534,39 @@
 			polling-delay = <2000>;
 			thermal-sensors = <&tmu 0>;
 			trips {
-				cpu_alert0: trip0 {
-					temperature = <85000>;
-					hysteresis = <2000>;
-					type = "passive";
-				};
+					cpu_alert0: trip0 {
+							temperature = <85000>; // test with 80000
+							hysteresis = <2000>;
+							type = "passive";
+					};
 
-				cpu_crit0: trip1 {
-					temperature = <95000>;
-					hysteresis = <2000>;
-					type = "critical";
-				};
+					cpu_crit0: trip1 {
+							temperature = <95000>;
+							hysteresis = <2000>;
+							type = "critical";
+					};
+					cpu_fan: trip3 {
+							temperature = <40000>;
+							hysteresis = <2000>;
+							type = "active";
+					};
 			};
 
-			cooling-maps {
-				map0 {
+		cooling-maps {
+
+				map1 {
 					trip = <&cpu_alert0>;
 					cooling-device =
 						<&A53_0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 						<&A53_1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 						<&A53_2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-						<&A53_3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+						<&A53_3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+						<&fan0 2 3>;
+				};
+				map2 {
+					trip = <&cpu_fan>;
+					cooling-device =
+						<&fan0 0 1>;
 				};
 			};
 		};
@@ -583,9 +598,25 @@
 						<&A53_2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 						<&A53_3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
 				};
+
 			};
 		};
 	};
+
+#if GPIO_FAN
+	fan0: gpio-fan {
+		device_type = "fan";
+		compatible = "gpio-fan";
+		#cooling-cells = <2>; /* min followed by max */
+	};
+#else
+	fan0: pwm-fan {
+		device_type = "fan";
+		compatible = "pwm-fan";
+		#cooling-cells = <2>;
+	};
+#endif
+
 
 	timer {
 		compatible = "arm,armv8-timer";
@@ -2565,4 +2596,5 @@
 			};
 		};
 	};
+
 };
