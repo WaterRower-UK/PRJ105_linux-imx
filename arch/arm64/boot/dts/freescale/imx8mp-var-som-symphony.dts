@@ -7,7 +7,7 @@
 #include "imx8mp-var-som.dtsi"
 
 //#define DEV_KIT 1
-// #define DEBUG_SERIAL 1
+#define DEBUG_SERIAL 1
 
 / {
 	model = "Variscite VAR-SOM-MX8M-PLUS on Symphony-Board 1.4a and above";
@@ -213,7 +213,7 @@
 		regulator-max-microvolt = <3300000>;
 		gpio = <&gpio5 12 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
-		status = "okay";
+		status = "disabled";
 	};
 #endif
 };
