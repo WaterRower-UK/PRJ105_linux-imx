@@ -961,11 +961,11 @@ retry_get_irq_gpio:
  */
 static void goodix_read_config(struct goodix_ts_data *ts)
 {
-	int x_max, y_max;
+	int x_max, y_max, ix;
 	int error;
 
 	error = goodix_i2c_read(ts->client, ts->chip->config_addr,
-				ts->config, 9;
+				ts->config, 9);
     pr_info("GOODIX : Read dts config...\n");
 	if (error) {
         pr_info("GOODIX : Read dts config error...\n");
@@ -1019,7 +1019,7 @@ static void goodix_read_config(struct goodix_ts_data *ts)
 
 	printk(KERN_INFO "GOODIX : Config From Chip : \n");
 
-	for(int ix=0;ix<ts->chip->config_len;ix+=11)
+	for(ix=0;ix<ts->chip->config_len;ix+=11)
 	{
 		u8 * dp = &ts->config[ix];
     	printk(KERN_INFO "[%02x] [%02x] [%02x] [%02x] [%02x] [%02x] [%02x] [%02x]  [%02x] [%02x] [%02x] \n", 
