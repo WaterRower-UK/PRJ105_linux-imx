@@ -834,6 +834,13 @@ static int gpio_keys_probe(struct platform_device *pdev)
 
 		error = gpio_keys_setup_key(pdev, input, ddata,
 					    button, i, child);
+
+		// Patch from Variscite support (J.D BSE)
+		if (error) {
+			fwnode_handle_put(child);
+			return error;
+		}
+
 		if (error) {
 			fwnode_handle_put(child);
 			return error;
