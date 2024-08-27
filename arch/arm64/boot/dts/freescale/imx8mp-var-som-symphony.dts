@@ -85,6 +85,7 @@
 #else
 	gpio-keys {
 		compatible = "gpio-keys";
+		/* poll-interval = <100>; /* Interval in milliseconds */
 		status = "okay";
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_keybutton>;
@@ -95,8 +96,8 @@
 			label = "VolumeUP";
 			gpios = <&gpio1 15 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_VOLUMEUP>;
-			//interrupt-parent = <&gpio1>;
-			//interrupts = <15 IRQ_TYPE_EDGE_FALLING>;
+			interrupt-parent = <&gpio1>;
+			interrupts = <15 IRQ_TYPE_EDGE_FALLING>;
 			//wakeup-source;
 		};
 
@@ -105,8 +106,8 @@
 			label = "VolumeDOWN";
 			gpios = <&gpio4 17 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_VOLUMEDOWN>;
-			//interrupt-parent = <&gpio4>;
-			//interrupts = <17 IRQ_TYPE_EDGE_FALLING>;
+			interrupt-parent = <&gpio4>;
+			interrupts = <17 IRQ_TYPE_EDGE_FALLING>;
 		 	//wakeup-source;
 		};
 
