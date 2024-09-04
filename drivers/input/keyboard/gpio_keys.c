@@ -819,6 +819,8 @@ static int gpio_keys_probe(struct platform_device *pdev)
 	if (pdata->rep)
 		__set_bit(EV_REP, input->evbit);
 
+	pr_info("BSE DEBUG : List GPIO KEY");
+
 	for (i = 0; i < pdata->nbuttons; i++) {
 		const struct gpio_keys_button *button = &pdata->buttons[i];
 
@@ -837,13 +839,13 @@ static int gpio_keys_probe(struct platform_device *pdev)
 
 		// Patch from Variscite support (J.D BSE)
 		if (error) {
+			pr_info("BSE DEBUG : Deferred Key %d failed", i);
 			fwnode_handle_put(child);
 			return error;
 		}
-
-		if (error) {
-			fwnode_handle_put(child);
-			return error;
+		else
+		{
+			pr_info("BSE DEBUG : Key %d Setup Ok", i);
 		}
 
 		if (button->wakeup)
