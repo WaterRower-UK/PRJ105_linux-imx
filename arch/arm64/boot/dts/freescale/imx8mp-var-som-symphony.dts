@@ -461,6 +461,14 @@
 				 <&clk IMX8MP_SYS_PLL2_50M>;
 	l1ss-disabled;
 	status = "okay";
+
+	brcmf_pcie: wifi@1 {
+	reg = <1>;
+	compatible = "brcm,bcm4329-fmac";
+	laird,regdomain = "US";
+	};
+	
+
 };
 
 &pcie_ep {
@@ -477,7 +485,7 @@
 	assigned-clock-rates = <500000000>, <10000000>;
 	assigned-clock-parents = <&clk IMX8MP_SYS_PLL2_500M>,
 				 <&clk IMX8MP_SYS_PLL2_50M>;
-	status = "okay";
+	status = "disabled";
 };
 
 &pcie_phy {

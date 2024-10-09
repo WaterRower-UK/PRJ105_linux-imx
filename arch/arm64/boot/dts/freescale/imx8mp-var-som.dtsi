@@ -342,7 +342,7 @@
 	status = "okay";
 };
 
-/* BT */
+/* BT 
 &uart3 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart3>;
@@ -352,7 +352,6 @@
 	status = "okay";
 };
 
-/* WIFI */
 &usdhc1 {
 	#address-cells = <1>;
 	#size-cells = <0>;
@@ -371,6 +370,7 @@
 		laird,regdomain = "US";
 	};
 };
+*/
 
 /* eMMC */
 &usdhc3 {
