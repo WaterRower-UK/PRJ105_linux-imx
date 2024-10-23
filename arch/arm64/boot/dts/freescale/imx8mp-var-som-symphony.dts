@@ -15,9 +15,9 @@
 	chosen {
 #ifdef DEBUG_SERIAL
 		stdout-path = &uart2;
-		bootargs-append = "console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 androidboot.console=ttymxc1  androidboot.primary_display=imx-drm androidboot.board=varsommx8mp androidboot.bt_sdio=/sys/bus/mmc/devices/mmc0:0001/mmc0:0001:1/device androidboot.bt_sdio_id=0x4339 androidboot.bt_uart=/dev/ttymxc2 androidboot.wificountrycode=US";
+		bootargs-append = "console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 androidboot.console=ttymxc1  androidboot.primary_display=imx-drm androidboot.board=varsommx8mp androidboot.bt_sdio=/sys/bus/mmc/devices/mmc0:0001/mmc0:0001:1/device androidboot.bt_sdio_id=0x4339 androidboot.bt_uart=/dev/ttymxc3 androidboot.wificountrycode=ETSI";
 #else
-		bootargs-append = "console=null androidboot.console=null androidboot.primary_display=imx-drm androidboot.board=varsommx8mp androidboot.bt_sdio=/sys/bus/mmc/devices/mmc0:0001/mmc0:0001:1/device androidboot.bt_sdio_id=0x4339 androidboot.bt_uart=/dev/ttymxc2 androidboot.wificountrycode=US";
+		bootargs-append = "console=null androidboot.console=null androidboot.primary_display=imx-drm androidboot.board=varsommx8mp androidboot.bt_sdio=/sys/bus/mmc/devices/mmc0:0001/mmc0:0001:1/device androidboot.bt_sdio_id=0x4339 androidboot.bt_uart=/dev/ttymxc3 androidboot.wificountrycode=ETSI";
 #endif
 	};
 
@@ -68,18 +68,6 @@
 
 	};
 
-/*
-	fan: gpio-fan {
-		compatible = "gpio-fan";
-		gpio-fan,speed-map = <0 0 8600 1>;
-		gpios = <&gpio3 5 GPIO_ACTIVE_HIGH>;
-		#cooling-cells = <2>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_fanio>;
-		interrupt-parent = <&gpio5>;
-		interrupts = <12 IRQ_TYPE_EDGE_RISING>;
-		status = "okay";
-	};*/
 
 #if DEV_KIT
 #else
@@ -202,47 +190,29 @@
 	};
 #endif
 
-#if GPIO_FAN
-#else
-    vdd_pwmfan_reg: regulator-pwn {
-		compatible = "regulator-fixed";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_fansupply>;
-		// Prerequisite to appear in terminal log when enabled / disabled
-		regulator-name = "vdd_pwm_fan";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio4 27 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		status = "disabled";
-	};
-#endif
 };
 
 &aud2htx {
 	status = "disabled";
 };
-#if GPIO_FAN
+
 &fan0 {
 	compatible = "gpio-fan";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_fansupply>;
 	gpios = <&gpio4 27 GPIO_ACTIVE_HIGH>;
+	gpio-fan,speed-map =  <0 0>,
+												<5000 2>,
+												<10000 1>,
+												<20000 3>;  // 0 = RPM 0, 1 = 5000 RPM
+#if 0
+	cooling-min-state = <0>;  // Fan off
+	cooling-max-state = <1>;  // Fan on (GPIO fan has only two states: on/off)
  	gpio-fan,speed-map = <0 0 5000 2 10000 4 20000 1>;
+#endif
 	status = "okay";
 };
 
-#else
-&fan0 {
-	pwms = <&pwm2 0 1000 0>;
-	cooling-levels = <0 255>;
-	pulses-per-revolution = <2>;
-	fan-supply = <&vdd_pwmfan_reg>;
-	interrupt-parent = <&gpio1>;
-	interrupts = <9 IRQ_TYPE_EDGE_RISING>;
-	status = "okay";
-};
-#endif
 
 &pwm1 {
 	pinctrl-names = "default";
@@ -250,15 +220,6 @@
 	status = "okay";
 };
 
-/* Setup Gpio Fan */
-#if GPIO_FAN
-#else
-&pwm2 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_pwm2>;
-	status = "okay";
-};
-#endif
 
 &eqos {
 	mdio {
@@ -514,8 +475,8 @@
 /* Header */
 &uart4 {
 	pinctrl-names = "default";
-	// pinctrl-0 = <&pinctrl_uart4>;
-	status = "disabled";
+	pinctrl-0 = <&pinctrl_uart4>;
+	status = "okay";
 };
 
 &usb3_phy0 {
@@ -762,14 +723,16 @@
 			MX8MP_IOMUXC_ECSPI1_SS0__UART3_DCE_RTS				0x140
 		>;
 	};
-/*
+
 	pinctrl_uart4: uart4grp {
 		fsl,pins = <
-			MX8MP_IOMUXC_UART4_RXD__UART4_DCE_RX				0x40
-			MX8MP_IOMUXC_UART4_TXD__UART4_DCE_TX				0x40
+			MX8MP_IOMUXC_ECSPI2_SCLK__UART4_DCE_RX				0x140
+			MX8MP_IOMUXC_ECSPI2_MOSI__UART4_DCE_TX				0x140
+			MX8MP_IOMUXC_ECSPI2_SS0__UART4_DCE_RTS				0x140 /* SSO  PIN 39 */
+			MX8MP_IOMUXC_ECSPI2_MISO__UART4_DTE_RTS				0x140 /* MISO PIN 41 */
 		>;
 	};
-*/
+
 	pinctrl_usdhc2_gpio: usdhc2grp-gpio {
 		fsl,pins = <
 			MX8MP_IOMUXC_GPIO1_IO14__GPIO1_IO14 				0x1c4

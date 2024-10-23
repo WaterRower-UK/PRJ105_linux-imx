@@ -535,7 +535,7 @@
 			thermal-sensors = <&tmu 0>;
 			trips {
 					cpu_alert0: trip0 {
-							temperature = <65000>; // test with 60000
+							temperature = <60000>; // test with 60000
 							hysteresis = <2000>;
 							type = "passive";
 					};
@@ -603,19 +603,11 @@
 		};
 	};
 
-#if GPIO_FAN
 	fan0: gpio-fan {
 		device_type = "fan";
 		compatible = "gpio-fan";
 		#cooling-cells = <2>; /* min followed by max */
 	};
-#else
-	fan0: pwm-fan {
-		device_type = "fan";
-		compatible = "pwm-fan";
-		#cooling-cells = <2>;
-	};
-#endif
 
 
 	timer {
