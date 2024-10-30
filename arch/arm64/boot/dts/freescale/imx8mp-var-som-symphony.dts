@@ -195,24 +195,27 @@
 &aud2htx {
 	status = "disabled";
 };
-
+#if GPIO_FAN
 &fan0 {
 	compatible = "gpio-fan";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_fansupply>;
 	gpios = <&gpio4 27 GPIO_ACTIVE_HIGH>;
-	gpio-fan,speed-map =  <0 0>,
-												<5000 2>,
-												<10000 1>,
-												<20000 3>;  // 0 = RPM 0, 1 = 5000 RPM
-#if 0
-	cooling-min-state = <0>;  // Fan off
-	cooling-max-state = <1>;  // Fan on (GPIO fan has only two states: on/off)
  	gpio-fan,speed-map = <0 0 5000 2 10000 4 20000 1>;
-#endif
 	status = "okay";
 };
 
+#else
+&fan0 {
+	pwms = <&pwm2 0 1000 0>;
+	cooling-levels = <0 255>;
+	pulses-per-revolution = <2>;
+	fan-supply = <&vdd_pwmfan_reg>;
+	interrupt-parent = <&gpio1>;
+	interrupts = <9 IRQ_TYPE_EDGE_RISING>;
+	status = "okay";
+};
+#endif
 
 &pwm1 {
 	pinctrl-names = "default";
@@ -477,6 +480,15 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart4>;
 	status = "okay";
+	bluetooth {
+					compatible = "infineon,cyw55572-bt"; /* brcm,bcm43438-bt" "infineon,cyw55572-bt" */
+					brcm,requires-autobaud-mode;
+					max-speed = <921600>;
+					/* shutdown-gpios defines the pin that controls BT_REG_ON */
+					/* A logical 1 is used to power on the radio */
+					shutdown-gpios = <&gpio3 14 GPIO_ACTIVE_HIGH>;
+
+	};
 };
 
 &usb3_phy0 {
@@ -848,6 +860,11 @@
 	 	>;
 	};
 
+  pinctrl_bt_reg_on: btgrp {
+		fsl,pins = <
+			MX8MP_IOMUXC_NAND_DQS__GPIO3_IO14 	0x0
+		>;
+	};
 
 	pinctrl_fansupply: fangrp {
 	  	fsl,pins = <
