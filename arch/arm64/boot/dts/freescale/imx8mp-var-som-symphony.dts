@@ -7,7 +7,7 @@
 #include "imx8mp-var-som.dtsi"
 
 //#define DEV_KIT 1
-#define DEBUG_SERIAL 1
+//#define DEBUG_SERIAL 1
 
 / {
 	model = "Variscite VAR-SOM-MX8M-PLUS on Symphony-Board 1.4a and above";
@@ -68,9 +68,6 @@
 
 	};
 
-
-#if DEV_KIT
-#else
 	gpio-keys {
 		compatible = "gpio-keys";
 		/* poll-interval = <100>; /* Interval in milliseconds */
@@ -108,40 +105,18 @@
 		 	wakeup-source;
 		};
 	};
-#endif
+
 
 	panel {
 		compatible = "sgd,gktw70sdae4se", "panel-lvds";
 		backlight = <&backlight>;
-#if DEV_KIT
-		width-mm = <153>;
-		height-mm = <87>;
-#else
 		width-mm = <430>;
 		height-mm = <254>;
-#endif
 		label = "innoluxpanel";
-#if DEV_KIT
-		data-mapping = "jeida-24";
-#else
 		data-mapping = "vesa-24";
-#endif
 		status = "okay";
 
 		panel-timing {
-#if DEV_KIT
-			clock-frequency = <33000000>;
-			hactive = <800>;
-			vactive = <480>;
-			hback-porch = <40>;
-			hfront-porch = <40>;
-			vback-porch = <29>;
-			vfront-porch = <13>;
-			hsync-len = <48>;
-			vsync-len = <3>;
-			hsync-active = <0>;
-			vsync-active = <0>;
-#else
 			clock-frequency = <148500000>; /* Fc x 2*/
 			hactive = <1920>; /* Thd x 2 */
 			vactive = <1080>; /* Tvd */
@@ -153,7 +128,6 @@
 			vback-porch = <15>;
 			vfront-porch = <15>;
 			vsync-len = <15>;
-#endif
 
 			/* Uses DE or not (1 = DE active high, 0 = DE active low)
 				Not specified = not used */
@@ -170,8 +144,7 @@
 	};
 
 
-#if DEV_KIT
-#else
+
     vdd_bl_reg: regulator-bl {
 		compatible = "regulator-fixed";
 		pinctrl-names = "default";
@@ -188,14 +161,13 @@
 		// REMOVE THIS REQUIRED BY GPIO DRIVER enable-active-high; else "GPIO handle specifies active low - ignored"
 		status = "okay";
 	};
-#endif
 
 };
 
 &aud2htx {
 	status = "disabled";
 };
-#if GPIO_FAN
+
 &fan0 {
 	compatible = "gpio-fan";
 	pinctrl-names = "default";
@@ -205,17 +177,6 @@
 	status = "okay";
 };
 
-#else
-&fan0 {
-	pwms = <&pwm2 0 1000 0>;
-	cooling-levels = <0 255>;
-	pulses-per-revolution = <2>;
-	fan-supply = <&vdd_pwmfan_reg>;
-	interrupt-parent = <&gpio1>;
-	interrupts = <9 IRQ_TYPE_EDGE_RISING>;
-	status = "okay";
-};
-#endif
 
 &pwm1 {
 	pinctrl-names = "default";
@@ -225,6 +186,8 @@
 
 
 &eqos {
+	status = "disabled";
+#if 0
 	mdio {
 		ethphy1: ethernet-phy@5 {
 			compatible = "ethernet-phy-ieee802.3-c22";
@@ -234,6 +197,7 @@
 			eee-broken-1000t;
 		};
 	};
+#endif
 };
 
 
@@ -376,16 +340,9 @@
 
 &ldb {
 	status = "okay";
-#ifdef DEV_KIT
-#else
 	fsl,dual-channel;
-#endif
 	lvds-channel@0 {
-#ifdef DEV_KIT
-		fsl,data-mapping = "jeida";
-#else
 		fsl,data-mapping = "spwg";
-#endif
 		// RGB888 mode
 		fsl,data-width = <24>;
 		status = "okay";
@@ -429,7 +386,7 @@
 	brcmf_pcie: wifi@1 {
 	reg = <1>;
 	compatible = "brcm,bcm4329-fmac";
-	laird,regdomain = "US";
+	laird,regdomain = "ETSI";
 	};
 	
 
@@ -479,7 +436,8 @@
 &uart4 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart4>;
-	status = "okay";
+  fsl,uart-has-rtscts;
+	status = "disable";
 	bluetooth {
 					compatible = "infineon,cyw55572-bt"; /* brcm,bcm43438-bt" "infineon,cyw55572-bt" */
 					brcm,requires-autobaud-mode;
@@ -742,6 +700,7 @@
 			MX8MP_IOMUXC_ECSPI2_MOSI__UART4_DCE_TX				0x140
 			MX8MP_IOMUXC_ECSPI2_SS0__UART4_DCE_RTS				0x140 /* SSO  PIN 39 */
 			MX8MP_IOMUXC_ECSPI2_MISO__UART4_DTE_RTS				0x140 /* MISO PIN 41 */
+			MX8MP_IOMUXC_NAND_DQS__GPIO3_IO14 	          0x0   /* W_DISABLE2 Sonia IF BLE Uart */
 		>;
 	};
 
@@ -860,11 +819,6 @@
 	 	>;
 	};
 
-  pinctrl_bt_reg_on: btgrp {
-		fsl,pins = <
-			MX8MP_IOMUXC_NAND_DQS__GPIO3_IO14 	0x0
-		>;
-	};
 
 	pinctrl_fansupply: fangrp {
 	  	fsl,pins = <
