@@ -7,7 +7,7 @@
 #include "imx8mp-var-som.dtsi"
 
 //#define DEV_KIT 1
-//#define DEBUG_SERIAL 1
+#define DEBUG_SERIAL 1
 
 / {
 	model = "Variscite VAR-SOM-MX8M-PLUS on Symphony-Board 1.4a and above";
@@ -433,6 +433,7 @@
 };
 
 /* Header */
+#ifdef _EZURIO_BLE_
 &uart4 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart4>;
@@ -448,6 +449,14 @@
 
 	};
 };
+#else
+/* Header */
+&uart4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart4>;
+	status = "okay";
+};
+#endif
 
 &usb3_phy0 {
 	fsl,phy-tx-vref-tune = <0xe>;
@@ -694,6 +703,7 @@
 		>;
 	};
 
+#ifdef _EZURIO_BLE_
 	pinctrl_uart4: uart4grp {
 		fsl,pins = <
 			MX8MP_IOMUXC_ECSPI2_SCLK__UART4_DCE_RX				0x140
@@ -703,7 +713,14 @@
 			MX8MP_IOMUXC_NAND_DQS__GPIO3_IO14 	          0x0   /* W_DISABLE2 Sonia IF BLE Uart */
 		>;
 	};
-
+#else
+	pinctrl_uart4: uart4grp {
+		fsl,pins = <
+			MX8MP_IOMUXC_UART4_RXD__UART4_DCE_RX				0x40
+			MX8MP_IOMUXC_UART4_TXD__UART4_DCE_TX				0x40
+		>;
+	};
+#endif
 	pinctrl_usdhc2_gpio: usdhc2grp-gpio {
 		fsl,pins = <
 			MX8MP_IOMUXC_GPIO1_IO14__GPIO1_IO14 				0x1c4
