@@ -7,7 +7,8 @@
 #include "imx8mp-var-som.dtsi"
 
 //#define DEV_KIT 1
-#define DEBUG_SERIAL 1
+#define _EZURIO_BLE_ 1
+//#define DEBUG_SERIAL 1
 
 / {
 	model = "Variscite VAR-SOM-MX8M-PLUS on Symphony-Board 1.4a and above";
@@ -432,20 +433,23 @@
 #endif
 };
 
-/* Header */
+
+/* Ezurio BT */
 #ifdef _EZURIO_BLE_
 &uart4 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart4>;
-  fsl,uart-has-rtscts;
-	status = "disable";
+	assigned-clocks = <&clk IMX8MP_CLK_UART4>;
+	assigned-clock-parents = <&clk IMX8MP_SYS_PLL1_80M>;
+	fsl,uart-has-rtscts;
+	status = "okay";
 	bluetooth {
-					compatible = "infineon,cyw55572-bt"; /* brcm,bcm43438-bt" "infineon,cyw55572-bt" */
-					brcm,requires-autobaud-mode;
-					max-speed = <921600>;
-					/* shutdown-gpios defines the pin that controls BT_REG_ON */
-					/* A logical 1 is used to power on the radio */
-					shutdown-gpios = <&gpio3 14 GPIO_ACTIVE_HIGH>;
+		compatible = "infineon,cyw55572-bt"; /* brcm,bcm43438-bt" "infineon,cyw55572-bt" */
+		brcm,requires-autobaud-mode;
+		max-speed = <921600>;
+		/* shutdown-gpios defines the pin that controls BT_REG_ON */
+		/* A logical 1 is used to power on the radio */
+		shutdown-gpios = <&gpio3 14 GPIO_ACTIVE_HIGH>;
 
 	};
 };
@@ -708,8 +712,8 @@
 		fsl,pins = <
 			MX8MP_IOMUXC_ECSPI2_SCLK__UART4_DCE_RX				0x140
 			MX8MP_IOMUXC_ECSPI2_MOSI__UART4_DCE_TX				0x140
+			MX8MP_IOMUXC_ECSPI2_MISO__UART4_DCE_CTS				0x140 /* MISO PIN 41 */
 			MX8MP_IOMUXC_ECSPI2_SS0__UART4_DCE_RTS				0x140 /* SSO  PIN 39 */
-			MX8MP_IOMUXC_ECSPI2_MISO__UART4_DTE_RTS				0x140 /* MISO PIN 41 */
 			MX8MP_IOMUXC_NAND_DQS__GPIO3_IO14 	          0x0   /* W_DISABLE2 Sonia IF BLE Uart */
 		>;
 	};

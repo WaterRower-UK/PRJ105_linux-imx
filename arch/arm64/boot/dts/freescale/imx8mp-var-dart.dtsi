@@ -73,7 +73,7 @@
                 reset-gpios = <&gpio2 6 GPIO_ACTIVE_HIGH>;
                 name = "bt_rfkill";
                 type = "bluetooth";
-                status = "okay";
+                status = "disable";
         };
 
 };
@@ -341,7 +341,7 @@
 	status = "okay";
 };
 
-/* BT */
+/* BT
 &uart4 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart4>;
@@ -351,7 +351,7 @@
 	status = "okay";
 };
 
-/* WIFI */
+WIFI 
 &usdhc1 {
 	#address-cells = <1>;
 	#size-cells = <0>;
@@ -369,7 +369,7 @@
 		compatible = "brcm,bcm4329-fmac";
 		laird,regdomain = "US";
 	};
-};
+};*/
 
 /* eMMC */
 &usdhc3 {

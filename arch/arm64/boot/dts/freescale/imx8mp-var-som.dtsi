@@ -73,7 +73,7 @@
                 reset-gpios = <&gpio2 9 GPIO_ACTIVE_HIGH>;
                 name = "bt_rfkill";
                 type = "bluetooth";
-                status = "okay";
+                status = "disabled";
         };
 
 };
@@ -342,7 +342,7 @@
 	status = "okay";
 };
 
-/* BT 
+/* BT */
 &uart3 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart3>;
@@ -351,7 +351,7 @@
 	uart-has-rtscts;
 	status = "okay";
 };
-
+/*
 &usdhc1 {
 	#address-cells = <1>;
 	#size-cells = <0>;
