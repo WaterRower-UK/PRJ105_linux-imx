@@ -167,7 +167,7 @@
 	snps,reset-gpio = <&gpio1 10 GPIO_ACTIVE_LOW>;
 	snps,reset-delays-us = <100000 10000 100000>;
 	mdio_rst_after_resume;
-	status = "okay";
+	status = "disabled";
 
 	mdio {
 		compatible = "snps,dwmac-mdio";
