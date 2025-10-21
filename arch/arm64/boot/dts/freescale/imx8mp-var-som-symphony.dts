@@ -16,13 +16,12 @@
 	chosen {
 #ifdef DEBUG_SERIAL
 		stdout-path = &uart2;
-		bootargs-append = "console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 androidboot.console=ttymxc1  androidboot.primary_display=imx-drm androidboot.board=varsommx8mp androidboot.bt_sdio=/sys/bus/mmc/devices/mmc0:0001/mmc0:0001:1/device androidboot.bt_sdio_id=0x4339 androidboot.bt_uart=/dev/ttymxc3 androidboot.wificountrycode=ETSI";
+		bootargs-append = "console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 androidboot.console=ttymxc1  androidboot.primary_display=imx-drm androidboot.board=varsommx8mp androidboot.bt_sdio=/sys/bus/mmc/devices/mmc0:0001/mmc0:0001:1/device androidboot.bt_sdio_id=0x4339 androidboot.bt_uart=/dev/ttymxc3 androidboot.wificountrycode=ETSI pci=nomsi";
 #else
-		bootargs-append = "console=null androidboot.console=null androidboot.primary_display=imx-drm androidboot.board=varsommx8mp androidboot.bt_sdio=/sys/bus/mmc/devices/mmc0:0001/mmc0:0001:1/device androidboot.bt_sdio_id=0x4339 androidboot.bt_uart=/dev/ttymxc3 androidboot.wificountrycode=ETSI";
+		bootargs-append = "console=null androidboot.console=null androidboot.primary_display=imx-drm androidboot.board=varsommx8mp androidboot.bt_sdio=/sys/bus/mmc/devices/mmc0:0001/mmc0:0001:1/device androidboot.bt_sdio_id=0x4339 androidboot.bt_uart=/dev/ttymxc3 androidboot.wificountrycode=ETSI pci=nomsi";
 #endif
 	};
 
-	
 	reg_usdhc2_vmmc: regulator-usdhc2-vmmc {
 		compatible = "regulator-fixed";
 		regulator-name = "VSD_3V3";
@@ -43,6 +42,20 @@
 		gpios-states = <1>;
 		states = <3300000 0
 			  1800000 1>;
+	};
+
+	reg_wifi: regulator-wifi {
+		compatible = "regulator-fixed";
+		regulator-name = "vdd_wifi";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_wifi>;
+		gpio = <&gpio4 7 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		status = "okay";
+		startup-delay-us = <100>;
+		off-on-delay-us = <100>;
 	};
 
 	backlight: backlight {
@@ -97,9 +110,17 @@
 		 	//wakeup-source;
 		};
 
+		/*
+		 * WaterRower - 25,Sep 2025
+		 * As variscite requested, while measuring CLKREQ line, found that
+		 * the GPIO5_IO28 also shared with Power button(InOffPlus). Now,
+		 * hardware is changed as below using seperate gpios
+		 * GPIO5_IO28 - CLKREQ line from WiFi card
+		 * GPIO4_IO16 - Android Power button (by pressing Vol+ & Vol- together)
+		 */
 		poweroff {
 			label = "PowerOFF";
-			gpios = <&gpio5 28 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio4 16 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_POWER>;
 			//interrupt-parent = <&gpio5>;
 			//interrupts = <28 IRQ_TYPE_EDGE_FALLING>;
@@ -369,7 +390,7 @@
 &pcie {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_pcie>;
-	reset-gpio = <&gpio4 21 GPIO_ACTIVE_LOW>;
+	reset-gpio = <&gpio1 1 GPIO_ACTIVE_LOW>;	/* OUT: PERST# (host -> WiFi card) to handle standby */
 	ext_osc = <1>;
 	clocks = <&clk IMX8MP_CLK_HSIO_ROOT>,
 		 <&clk IMX8MP_CLK_PCIE_AUX>,
@@ -383,14 +404,16 @@
 				 <&clk IMX8MP_SYS_PLL2_50M>;
 	l1ss-disabled;
 	status = "okay";
-
+	/* disable-gpio & clkreq-gpio not used in this pcie driver (kernel 5.10.120). */
+	/* disable-gpio = <&gpio1 11 GPIO_ACTIVE_LOW>;*/ /* IN: PEWAKE (host -> WiFi card) */
+	/* clkreq-gpio = <&gpio5 28 GPIO_ACTIVE_LOW>;*/	/* IN: CLKREQ (wifi card -> host) */
+	epdev_on-supply =  <&reg_wifi>;
 	brcmf_pcie: wifi@1 {
-	reg = <1>;
-	compatible = "brcm,bcm4329-fmac";
-	laird,regdomain = "ETSI";
+		reg = <1>;
+		compatible = "brcm,bcm4329-fmac";
+		laird,regdomain = "ETSI";
+		status = "okay";
 	};
-	
-
 };
 
 &pcie_ep {
@@ -441,16 +464,17 @@
 	pinctrl-0 = <&pinctrl_uart4>;
 	assigned-clocks = <&clk IMX8MP_CLK_UART4>;
 	assigned-clock-parents = <&clk IMX8MP_SYS_PLL1_80M>;
-	fsl,uart-has-rtscts;
+	/*fsl,uart-has-rtscts;*/
+	rts-gpios = <&gpio5 13 GPIO_ACTIVE_LOW>;
+	cts-gpios = <&gpio5 12 GPIO_ACTIVE_LOW>;
 	status = "okay";
+	/* fsl,dte-mode; */
 	bluetooth {
 		compatible = "infineon,cyw55572-bt"; /* brcm,bcm43438-bt" "infineon,cyw55572-bt" */
 		brcm,requires-autobaud-mode;
 		max-speed = <921600>;
-		/* shutdown-gpios defines the pin that controls BT_REG_ON */
-		/* A logical 1 is used to power on the radio */
-		shutdown-gpios = <&gpio3 14 GPIO_ACTIVE_HIGH>;
-
+		// shutdown-gpios = <&gpio3 14 GPIO_ACTIVE_HIGH>;
+		enable-gpios = <&gpio3 14 GPIO_ACTIVE_LOW>;
 	};
 };
 #else
@@ -710,10 +734,10 @@
 #ifdef _EZURIO_BLE_
 	pinctrl_uart4: uart4grp {
 		fsl,pins = <
-			MX8MP_IOMUXC_ECSPI2_SCLK__UART4_DCE_RX				0x140
+			MX8MP_IOMUXC_ECSPI2_SCLK__UART4_DCE_RX				0x00
 			MX8MP_IOMUXC_ECSPI2_MOSI__UART4_DCE_TX				0x140
-			MX8MP_IOMUXC_ECSPI2_MISO__UART4_DCE_CTS				0x140 /* MISO PIN 41 */
-			MX8MP_IOMUXC_ECSPI2_SS0__UART4_DCE_RTS				0x140 /* SSO  PIN 39 */
+			MX8MP_IOMUXC_ECSPI2_MISO__GPIO5_IO12                0x0
+			MX8MP_IOMUXC_ECSPI2_SS0__GPIO5_IO13                 0x0
 			MX8MP_IOMUXC_NAND_DQS__GPIO3_IO14 	          0x0   /* W_DISABLE2 Sonia IF BLE Uart */
 		>;
 	};
@@ -810,19 +834,31 @@
 		>;
 	};
 
+	/* OUT: SOM pin-75 PERST host -> wifi card;  */
+	/* IN : SOM pin-115 CLKREQ wifi card -> host */
+	/* IN : SOM pin-69 PEWAKE0 wifi card -> host */
 	pinctrl_pcie: pciegrp {
 		fsl,pins = <
-			MX8MP_IOMUXC_SAI2_RXFS__GPIO4_IO21				0x40
+			MX8MP_IOMUXC_GPIO1_IO01__GPIO1_IO01				0x040  /* PERST */
+			/*MX8MP_IOMUXC_GPIO1_IO11__GPIO1_IO11			0x140*/ /* PCIE_WAKE */
+			/*MX8MP_IOMUXC_UART4_RXD__GPIO5_IO28			0x140*/ /* CLKREQ */
 		>;
 	};
 
+	/* OUT: pin-81 W_DISABLE1->WL_REG_ON  - host to slave device */
+	pinctrl_wifi: wifipowergrp {
+		fsl,pins = <
+			MX8MP_IOMUXC_SAI1_RXD5__GPIO4_IO07				0x40
+		>;
+	};
+
+	/* camera - not used */
 	pinctrl_csi0: csi0grp {
 		fsl,pins = <
 			MX8MP_IOMUXC_GPIO1_IO00__GPIO1_IO00				0x10
 			MX8MP_IOMUXC_GPIO1_IO08__GPIO1_IO08				0x10
 			>;
 	};
-
 
     pinctrl_blpower: regulatorblgrp {
 	 	fsl,pins = <
@@ -836,15 +872,14 @@
 		fsl,pins = <
 			MX8MP_IOMUXC_GPIO1_IO15__GPIO1_IO15		0x10 /* VOL_P  0x16*/
 	 		MX8MP_IOMUXC_SAI1_TXD5__GPIO4_IO17		0x10 /* VOL_M  0x16*/
-	 		MX8MP_IOMUXC_UART4_RXD__GPIO5_IO28		0x10 /* POWER OFF  0x16*/
+			MX8MP_IOMUXC_SAI1_TXD4__GPIO4_IO16		0x10 /* POWER OFF  0x16*/
+
 	 	>;
 	};
-
 
 	pinctrl_fansupply: fangrp {
 	  	fsl,pins = <
 	  		MX8MP_IOMUXC_SAI2_MCLK__GPIO4_IO27	0x0	/* FAN Supply Output  */
 	  	>;
 	};
-
 };

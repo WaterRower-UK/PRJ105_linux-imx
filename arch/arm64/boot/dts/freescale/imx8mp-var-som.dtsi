@@ -167,7 +167,7 @@
 	snps,reset-gpio = <&gpio1 10 GPIO_ACTIVE_LOW>;
 	snps,reset-delays-us = <100000 10000 100000>;
 	mdio_rst_after_resume;
-	status = "okay";
+	status = "disabled"; // PW/KBR - wired n/w unsed in waterrower 
 
 	mdio {
 		compatible = "snps,dwmac-mdio";
@@ -349,7 +349,7 @@
 	assigned-clocks = <&clk IMX8MP_CLK_UART3>;
 	assigned-clock-parents = <&clk IMX8MP_SYS_PLL1_80M>;
 	uart-has-rtscts;
-	status = "okay";
+	status = "disabled"; // PW/KBR - waterrower using external BT, not SOM inbuilt BT. 
 };
 /*
 &usdhc1 {
@@ -575,12 +575,13 @@
 		>;
 	};
 
-	pinctrl_wifi: wifigrp {
-		fsl,pins = <
-			MX8MP_IOMUXC_SD1_DATA6__GPIO2_IO08				0xc0 /* WIFI_EN  */
-			MX8MP_IOMUXC_SD2_RESET_B__GPIO2_IO19				0xc0 /* WIFI_PWR */
-		>;
-	};
+// WaterRower - not used.
+//	pinctrl_wifi: wifigrp {
+//		fsl,pins = <
+//			MX8MP_IOMUXC_SD1_DATA6__GPIO2_IO08				0xc0 /* WIFI_EN  */
+//			MX8MP_IOMUXC_SD2_RESET_B__GPIO2_IO19				0xc0 /* WIFI_PWR */
+//		>;
+//	};
 
 	pinctrl_bt: btgrp {
 		fsl,pins = <
