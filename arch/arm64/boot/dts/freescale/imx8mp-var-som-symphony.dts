@@ -79,7 +79,6 @@
 #else
         power-supply = <&vdd_bl_reg>;
 #endif
-
 	};
 
 	gpio-keys {
@@ -112,15 +111,21 @@
 
 		/*
 		 * WaterRower - 25,Sep 2025
-		 * As variscite requested, while measuring CLKREQ line, found that
-		 * the GPIO5_IO28 also shared with Power button(InOffPlus). Now,
-		 * hardware is changed as below using seperate gpios
-		 * GPIO5_IO28 - CLKREQ line from WiFi card
-		 * GPIO4_IO16 - Android Power button (by pressing Vol+ & Vol- together)
+		 * The GPIO5_IO28 now used for Power button(OnOffPlus).
+		 * But note that PCIe CLKREQ signal line is also wired
+		 * for the same pin, but not connected now, and schematic says
+		 * a switch "cut to test m.2 clock chip" on pin 115.
+		 * As of now, there is no issue as CLKREQ not used. But, upgrading to latest
+		 * kernel like 6.6.x, the PCIe driver totally having different 
+		 * implementation. So, it may require CLKREQ signal line as input, which 
+		 * may require both hardware & software change in future.
+		 * Reference: 
+		 * Variscite Customer support Ticket ID [#26552]
+		 * https://varisciteportal.axosoft.com/viewitem?id=26552&type=defects&force_use_number=true
 		 */
 		poweroff {
 			label = "PowerOFF";
-			gpios = <&gpio4 16 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio5 28 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_POWER>;
 			//interrupt-parent = <&gpio5>;
 			//interrupts = <28 IRQ_TYPE_EDGE_FALLING>;
@@ -404,7 +409,12 @@
 				 <&clk IMX8MP_SYS_PLL2_50M>;
 	l1ss-disabled;
 	status = "okay";
-	/* disable-gpio & clkreq-gpio not used in this pcie driver (kernel 5.10.120). */
+	/*
+	 * disable-gpio & clkreq-gpio not used in this pcie driver (kernel 5.10.120). 
+	 * For more info, please refer
+	 * Variscite Customer support Ticket ID [#26552] 	 
+	 * https://varisciteportal.axosoft.com/viewitem?id=26552&type=defects&force_use_number=true
+	 */
 	/* disable-gpio = <&gpio1 11 GPIO_ACTIVE_LOW>;*/ /* IN: PEWAKE (host -> WiFi card) */
 	/* clkreq-gpio = <&gpio5 28 GPIO_ACTIVE_LOW>;*/	/* IN: CLKREQ (wifi card -> host) */
 	epdev_on-supply =  <&reg_wifi>;
@@ -872,8 +882,7 @@
 		fsl,pins = <
 			MX8MP_IOMUXC_GPIO1_IO15__GPIO1_IO15		0x10 /* VOL_P  0x16*/
 	 		MX8MP_IOMUXC_SAI1_TXD5__GPIO4_IO17		0x10 /* VOL_M  0x16*/
-			MX8MP_IOMUXC_SAI1_TXD4__GPIO4_IO16		0x10 /* POWER OFF  0x16*/
-
+	 		MX8MP_IOMUXC_UART4_RXD__GPIO5_IO28		0x10 /* POWER OFF  0x16*/
 	 	>;
 	};
 
